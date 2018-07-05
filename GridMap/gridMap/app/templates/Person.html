@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>停留点映射网格</title>
+
+    <link rel="stylesheet" href="../static/dist/css/leaflet.extra-markers.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css" integrity="sha512-wcw6ts8Anuw10Mzh9Ytw4pylW8+NAD4ch3lqm9lzAsTxg0GFeJgoAtxuCLREZSC5lUXdVyo/7yfsqFjQ4S+aKw==" crossorigin=""/>
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+
+    <script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js" integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA==" crossorigin=""></script>
+    <script src="../static/dist/js/leaflet.extra-markers.min.js"></script>
+    <script src="../static/lib/proj4-compressed.js"></script>
+    <script src="../static/src/proj4leaflet.js"></script>
+   
+    <style>
+        body, html { margin:0; padding:0; height:100%;}
+        body { font-family:sans-serif; }
+        body * { font-weight:200;}
+        h1 { position:absolute; background:white; padding:10px;}
+        #map { height:100%; }
+        .leaflet-container {
+            background: rgba(0,0,0,.8) !important;
+        }
+       
+    </style>
+</head>
+<body>
+   
+    <script src="../static/borders_0905.js"></script>
+    <script src="../static/L.Control.Button.js"></script>
+    <div id="map"></div>
+    <script>
+        //投影，引入百度地图
+        var crs = new L.Proj.CRS('EPSG:900913',
+            '+proj=merc +a=6378206 +b=6356584.314245179 +lat_ts=0.0 +lon_0=0.0 +x_0=0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs',
+            {
+                resolutions: function () {
+                    level = 19
+                    var res = [];
+                    res[0] = Math.pow(2, 18);
+                    for (var i = 1; i < level; i++) {
+                        res[i] = Math.pow(2, (18 - i))
+                    }
+                    return res;
+                }(),
+                origin: [0,0],
+                bounds: L.bounds([20037508.342789244, 0], [0, 20037508.342789244])
+            }),
+            map = L.map('map', {
+                crs: crs,
+                center: [26.5812,106.7051], 
+                zoom: 10
+            });
+
+
+    var baidumaplayer = new L.TileLayer('http://online{s}.map.bdimg.com/tile/?qt=tile&x={x}&y={y}&z={z}&styles=pl&udt=20170518', {
+        maxZoom: 18,
+        minZoom: 3,
+        subdomains: [0,1,2],
+        tms: true
+    }).addTo(map);
+
+    
+    var gridGroup = L.layerGroup().addTo(map);//网格图层
+    var spm = L.layerGroup();//marker
+    var spm_button = L.layerGroup().addTo(map);//按钮控制的marker
+
+    var i = -1;//每点击一下画一个的全局变量
+
+
+    ShowGridLayer();
+    ShowSMarkers();
+
+
+    var button = new L.Control.Button('click');
+      button.addTo(map);
+      button.on('click', function () {
+          if(i === -1){
+              var numMarker1 = L.ExtraMarkers.icon({
+               icon:'fa-number',
+                number:1,
+                markerColor:'blue'
+            });
+          L.marker([stayPoints[0].lat, stayPoints[0].lng], {icon:numMarker1})
+              .bindPopup(stayPoints[0].time+"\n"+stayPoints[0].imsi+'\n'+stayPoints[0].lat+','+ stayPoints[0].lng)
+              .addTo(spm_button);
+          i++;
+          }
+          else{
+              var numMarker2 = L.ExtraMarkers.icon({
+               icon:'fa-number',
+                number:i+2,
+                markerColor:'blue'
+            });
+            var latlngs = [
+             [stayPoints[i].lat, stayPoints[i].lng],
+             [stayPoints[i+1].lat, stayPoints[i+1].lng]
+             ];
+            L.polyline(latlngs, {color: "#1164d6"}).addTo(spm_button);
+
+            L.marker([stayPoints[i+1].lat, stayPoints[i+1].lng], {icon:numMarker2})
+                .bindPopup(stayPoints[i+1].time+"\n"+stayPoints[i+1].imsi+'\n'+stayPoints[i+1].lat+','+ stayPoints[i+1].lng)
+                .addTo(spm_button);
+
+            i++;
+          }
+      });
+
+    //直接显示投影网格
+    function ShowGridLayer() {         
+        for (var i = 0, l = gridBorder.length; i < l; i++) {
+            var bounds = [[gridBorder[i].lat1, gridBorder[i].lng1], [gridBorder[i].lat2, gridBorder[i].lng2]];
+            var color = '#f46d43'
+            var opacity = 0.7
+            var myrectangle =  L.rectangle(bounds, {
+                    weight: 0.5,
+                    color: color,
+                    //stroke: true,'#a6d96a'
+
+                    fillOpacity: 0.4
+                 }).bindPopup('The grid ID is: '+gridBorder[i].gridId).addTo(gridGroup);
+
+                
+                }               
+            };
+
+    function onEachFeature(feature, layer) {
+    if (feature.properties && feature.properties.popupContent) {
+        layer.bindPopup(feature.properties.popupContent);
+        }
+    }
+
+    //直接看停留点的连线
+    var user_trajectory = L.geoJson(userlocation,{
+        onEachFeature: onEachFeature,
+        color: "#1164d6"
+    });
+
+    //直接看停留点的marker
+    function ShowSMarkers(){
+        for (var k=0, l = stayPoints.length;k<l;k++){
+           var numMarker = L.ExtraMarkers.icon({
+               icon:'fa-number',
+                number:k+1,
+                markerColor:'blue'
+            });
+          var mymarker = L.marker([stayPoints[k].lat, stayPoints[k].lng], {icon:numMarker})
+          .bindPopup(stayPoints[k].time+'\n'+stayPoints[k].imsi+'\n'+stayPoints[k].lat+','+ stayPoints[k].lng)
+          .addTo(spm);
+        }
+    };
+
+    //图层控制
+    var overlays1 = {
+        'map': baidumaplayer
+    };
+
+    var overlays2 = {
+        "button layer": spm_button,
+        "markers": spm,
+        "line": user_trajectory,
+        "grid": gridGroup
+    };
+    L.control.layers(overlays1,overlays2,{ collapsed: false }).addTo(map);
+
+        
+    </script>
+
+</body>
+</html>

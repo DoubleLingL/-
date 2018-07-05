@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--<meta charset="UTF-8">-->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no"/>
+    <title>more_traj</title>
+    <style type="text/css">
+    body, html { margin:0; padding:0; height:100%;}
+    #container {height:100%}
+    </style>
+    <script type="text/javascript"
+            src="http://api.map.baidu.com/api?v=2.0&&ak=PdCrNuQKdZbUASQy3uH7GhTNk6Uh3mxu">
+    </script>
+</head>
+<body>
+
+    <div id="container"></div>
+    <script type="text/javascript">
+        /*创建地图并添加控件 begin*/
+        var map = new BMap.Map("container");//在百度地图容器中创建一个地图
+        var point = new BMap.Point(106.7051,26.5812);//定义一个中心点坐标
+        map.centerAndZoom(point,13);//设定地图的中心点和坐标并将地图显示在地图容器中
+
+        //地图控件添加函数：
+
+        //向地图中添加缩放控件
+	    map.addControl(new BMap.NavigationControl());
+
+        //向地图中添加缩略图控件
+	    map.addControl(new BMap.OverviewMapControl());
+
+        //向地图中添加比例尺控件
+	    map.addControl(new BMap.ScaleControl());
+
+        map.addControl(new BMap.MapTypeControl());
+
+        //map.setCurrentCity("北京");
+
+
+        /*创建地图并添加控件 end*/
+
+        /*添加三组示例坐标　begin*/
+
+        var points = [[106.57617881915999,26.582703099340996],
+                 [106.569799652965,26.5842587672795],
+                 [106.57617881916,26.582703099341],
+                 [106.54292029998334,26.562842863239]];
+        showPolyLine(points,"red");
+
+        var points=[[ 106.57617881915999,26.582703099340996 ],
+                [ 106.54932348437,26.567577738735 ],
+                [ 106.57617881916,26.582703099341 ],
+                [ 106.56380943351998,26.556839556847994 ]];
+        showPolyLine(points,"blue");
+
+        var points=[ [106.57617881915999,26.582703099340996],
+                [106.54932348437,26.567577738735],
+                [106.57617881916,26.582703099341],
+                [106.56380943351998,26.556839556847994]];
+        showPolyLine(points,"black");
+        /*添加三组示例坐标　end*/
+
+        function showPolyLine(points, color) {
+            /* points[][]数据结构为二维数组，这里转换为Marker，再将多个marker点放入pline，组成一条线  begin */
+            var pLine = [];
+            for (var i = 0; i < points.length; i++) {
+                pLine.push(new BMap.Point(points[i][0], points[i][1]));
+                map.addOverlay(new BMap.Marker(new BMap.Point(points[i][0],points[i][1])));
+
+            }
+            /* points[][]数据结构为二维数组，这里转换为Marker，再将多个marker点放入pline，组成一条线  end */
+            /* 添加轨迹接口begin */
+            var polyline = new BMap.Polyline(pLine, {
+                strokeColor : color,
+                strokeWeight : 6,
+                strokeOpacity : 0.5
+            });
+            map.addOverlay(polyline);
+            /* 添加轨迹接口 end */
+
+        };
+
+
+    </script>
+
+</body>
+</html>
