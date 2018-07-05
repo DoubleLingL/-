@@ -1,0 +1,11 @@
+root@hll:/home/hll# sed -i 's/ /,/g' 2.txt
+root@hll:/home/hll# sed -i "s/ /,/g" 2.txt
+root@hll:/home/hll# sed -i "s/\,/ /g" 2.txt
+root@hll:/home/hll# sed -i "s/\[//g" 2.txt
+root@hll:/home/hll# sed -i "s/\[//g" 1.txt
+root@hll:/home/hll# sed -i "s/\'//g" 1.txt
+root@hll:/home/hll# sed -i "s/\]//g" 1.txt
+root@hll:/home/hll# sed -i "s/\'//g" 1.txt
+root@hll:/home/hll# sed -i "s/\'/ /g" 1.txt
+root@hll:/home/hll# sed -i "s/\'*/ /g" 1.txt
+
